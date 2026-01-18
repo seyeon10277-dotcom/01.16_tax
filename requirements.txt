@@ -3,5 +3,3 @@ pandas
 numpy
 matplotlib
 seaborn
-koreanize-matplotlib
-fonts-nanum
