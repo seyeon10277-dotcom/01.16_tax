@@ -5,21 +5,22 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import seaborn as sns
 
-# --- 한글 폰트 설정 (에러 없이 한글 깨짐 해결) ---
+# --- OS별 한글 폰트 자동 설정 ---
 def set_korean_font():
-    # 시스템에 설치된 폰트 목록 확인
+    # 1. 시스템에 설치된 전체 폰트 목록 로드
     font_names = [f.name for f in fm.fontManager.ttflist]
     
-    # 1. 나눔고딕 (Streamlit Cloud/Linux용)
-    if 'NanumGothic' in font_names:
+    # 2. 환경별 최적의 폰트 순차적 적용
+    if 'NanumGothic' in font_names:          # Streamlit Cloud (Linux)
         plt.rc('font', family='NanumGothic')
-    # 2. 맑은 고딕 (Windows용)
-    elif 'Malgun Gothic' in font_names:
+    elif 'Malgun Gothic' in font_names:      # Windows
         plt.rc('font', family='Malgun Gothic')
-    # 3. 애플고딕 (Mac용)
-    elif 'AppleGothic' in font_names:
+    elif 'AppleGothic' in font_names:        # Mac
         plt.rc('font', family='AppleGothic')
-        
+    else:
+        # 폰트를 못 찾을 경우 기본 폰트라도 설정 (ㅁㅁ 방지 시도)
+        st.warning("시스템에서 한글 폰트를 찾을 수 없어 차트 글자가 깨질 수 있습니다.")
+
     # 마이너스 기호 깨짐 방지
     plt.rc('axes', unicode_minus=False)
 
@@ -47,11 +48,12 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("📊 주요 계산 단계")
-            st.markdown("""
-            1. **총급여액** - 근로소득공제 = **근로소득금액**
-            2. **근로소득금액** - 인적공제/소득공제 = **과세표준**
-            3. **과세표준** × 세율 = **산출세액**
-            4. **산출세액** - 세액감면/공제 = **결정세액**
+            # 복잡한 계산식은 LaTeX를 활용해 가독성을 높였습니다.
+            st.markdown(r"""
+            1. **근로소득금액** = 총급여액 - 근로소득공제
+            2. **과세표준** = 근로소득금액 - 인적공제/소득공제
+            3. **산출세액** = 과세표준 $\times$ 세율
+            4. **결정세액** = 산출세액 - 세액감면/공제
             """)
         
         with col2:
@@ -89,6 +91,7 @@ def main():
             deduction = st.number_input("예상 소득공제 합계 (원)", min_value=0, value=15000000, step=500000)
             tax_credit = st.number_input("예상 세액공제 합계 (원)", min_value=0, value=1000000, step=100000)
 
+        # 간단한 산식 적용
         taxable_income = max(0, salary - deduction)
         def calculate_tax(income):
             if income <= 14000000: return income * 0.06
