@@ -2,12 +2,28 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 import seaborn as sns
-import koreanize_matplotlib  
-# 한글 깨짐 해결을 위해 추가된 라이브러리
 
-# 마이너스 기호 깨짐 방지 설정
-plt.rc('axes', unicode_minus=False)
+# --- 한글 폰트 설정 (에러 없이 한글 깨짐 해결) ---
+def set_korean_font():
+    # 시스템에 설치된 폰트 목록 확인
+    font_names = [f.name for f in fm.fontManager.ttflist]
+    
+    # 1. 나눔고딕 (Streamlit Cloud/Linux용)
+    if 'NanumGothic' in font_names:
+        plt.rc('font', family='NanumGothic')
+    # 2. 맑은 고딕 (Windows용)
+    elif 'Malgun Gothic' in font_names:
+        plt.rc('font', family='Malgun Gothic')
+    # 3. 애플고딕 (Mac용)
+    elif 'AppleGothic' in font_names:
+        plt.rc('font', family='AppleGothic')
+        
+    # 마이너스 기호 깨짐 방지
+    plt.rc('axes', unicode_minus=False)
+
+set_korean_font()
 
 def main():
     # 페이지 설정
@@ -39,7 +55,6 @@ def main():
             """)
         
         with col2:
-            # 데이터프레임 시각화
             steps = pd.DataFrame({
                 "단계": ["총급여액", "소득공제 후", "세율 적용 후", "세액공제 후"],
                 "금액 수준": [100, 70, 40, 30]
@@ -51,17 +66,13 @@ def main():
 
     elif menu == "세율 및 구조 시각화":
         st.header("2. 소득 구간별 기본 세율 시각화")
-        
-        # 2024년 귀속 기본세율 데이터
         tax_data = {
             "과세표준 구간": ["1,400만원 이하", "5,000만원 이하", "8,800만원 이하", "1.5억원 이하", "3억원 이하", "5억원 이하", "10억원 이하", "10억원 초과"],
             "세율(%)": [6, 15, 24, 35, 38, 40, 42, 45]
         }
         df_tax = pd.DataFrame(tax_data)
-
         st.table(df_tax)
 
-        # 그래프 시각화
         st.subheader("📈 과세표준 구간별 세율 변화")
         fig, ax = plt.subplots(figsize=(10, 5))
         sns.lineplot(data=df_tax, x="과세표준 구간", y="세율(%)", marker="o", color="red", ax=ax)
@@ -72,18 +83,13 @@ def main():
 
     elif menu == "간이 시뮬레이터":
         st.header("3. 나의 연말정산 간이 시뮬레이션")
-        st.write("본인의 총급여와 예상 공제액을 입력해보세요.")
-
         col1, col2 = st.columns(2)
-        
         with col1:
             salary = st.number_input("연간 총급여 (원)", min_value=0, value=50000000, step=1000000)
             deduction = st.number_input("예상 소득공제 합계 (원)", min_value=0, value=15000000, step=500000)
             tax_credit = st.number_input("예상 세액공제 합계 (원)", min_value=0, value=1000000, step=100000)
 
-        # 계산 로직 (간략화된 버전)
         taxable_income = max(0, salary - deduction)
-        
         def calculate_tax(income):
             if income <= 14000000: return income * 0.06
             elif income <= 50000000: return 840000 + (income - 14000000) * 0.15
@@ -98,12 +104,10 @@ def main():
             st.metric("예상 산출세액", f"{calculated_tax:,.0f} 원")
             st.success(f"최종 결정세액: {final_tax:,.0f} 원")
 
-        # 비중 시각화 (Pie Chart)
         st.subheader("💰 급여 대비 세금 비중")
         remaining = salary - final_tax
         labels = ['결정세액', '실수령액(예상)']
         sizes = [final_tax, remaining]
-        
         fig2, ax2 = plt.subplots(figsize=(6, 6))
         ax2.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=['#ff9999','#66b3ff'])
         ax2.axis('equal') 
