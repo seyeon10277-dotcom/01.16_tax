@@ -2,29 +2,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
 import seaborn as sns
+import koreanize_matplotlib  # 이 라이브러리가 클라우드 환경의 한글 깨짐을 자동으로 해결합니다.
 
-# --- OS별 한글 폰트 자동 설정 ---
-def set_korean_font():
-    # 1. 시스템에 설치된 전체 폰트 목록 로드
-    font_names = [f.name for f in fm.fontManager.ttflist]
-    
-    # 2. 환경별 최적의 폰트 순차적 적용
-    if 'NanumGothic' in font_names:          # Streamlit Cloud (Linux)
-        plt.rc('font', family='NanumGothic')
-    elif 'Malgun Gothic' in font_names:      # Windows
-        plt.rc('font', family='Malgun Gothic')
-    elif 'AppleGothic' in font_names:        # Mac
-        plt.rc('font', family='AppleGothic')
-    else:
-        # 폰트를 못 찾을 경우 기본 폰트라도 설정 (ㅁㅁ 방지 시도)
-        st.warning("시스템에서 한글 폰트를 찾을 수 없어 차트 글자가 깨질 수 있습니다.")
-
-    # 마이너스 기호 깨짐 방지
-    plt.rc('axes', unicode_minus=False)
-
-set_korean_font()
+# --- 마이너스 기호 깨짐 방지 설정만 유지 ---
+plt.rc('axes', unicode_minus=False)
 
 def main():
     # 페이지 설정
@@ -48,7 +30,7 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("📊 주요 계산 단계")
-            # 복잡한 계산식은 LaTeX를 활용해 가독성을 높였습니다.
+            # LaTeX 활용 수식
             st.markdown(r"""
             1. **근로소득금액** = 총급여액 - 근로소득공제
             2. **과세표준** = 근로소득금액 - 인적공제/소득공제
